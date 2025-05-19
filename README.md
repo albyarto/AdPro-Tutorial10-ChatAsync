@@ -57,3 +57,46 @@ Jika hanya salah satu sisi yang diubah (misalnya hanya client saja), maka koneks
 Setelah port diubah menjadi 8080 di kedua sisi, aplikasi dirun kembali. Server berhasil menerima koneksi dari semua client, dan pertukaran pmessage tetap berlangsung dengan lancar. Tidak ditemukan error atau gangguan dalam koneksi. Hal ini membuktikan bahwa perubahan port berhasil dilakukan dan sistem tetap berfungsi seperti sebelumnya.
 
 ---
+
+### 2.3 –  Small changes. Add some information to client
+
+![image](https://github.com/user-attachments/assets/f4afe60a-4664-4b76-8515-941217fdb41f)
+
+Pada eksperimen ini, dilakukan perubahan kecil pada sisi server dan client untuk menambahkan informasi IP dan port pengirim pada setiap message yang diterima oleh client. Tujuan dari modifikasi ini adalah untuk memahami bagaimana message dikirim dan diteruskan antar client dalam sistem komunikasi berbasis WebSocket. Karena saat ini belum ada sistem identifikasi pengguna (seperti username atau nickname), maka alamat IP dan port pengirim menjadi cara yang efektif untuk membedakan asal message.
+
+### Modifikasi yang Dilakukan
+
+#### Di sisi server:
+
+Kode di bagian `handle_connection` telah diubah agar setiap message yang dikirimkan dari client akan diwrap dengan informasi alamat IP dan port dari client tersebut. Berikut adalah potongan kode yang dimodifikasi:
+
+```rust
+if let Some(text) = msg.as_text() {
+    println!("From client {addr:?} {text:?}");
+    let full_msg = format!("{addr}: {}", text);
+    bcast_tx.send(full_msg)?;
+}
+```
+
+Modifikasi ini membuat server mencetak log asal message dengan alamat client, dan mengirim message ke client lain dalam format:
+
+```
+127.0.0.1:55642: i'm client 1
+```
+
+#### Di sisi client:
+
+Kode di bagian client ditambahkan informasi Alby's Komputer dan mencetak setiap message dari server dengan format yang lebih deskriptif:
+
+```rust
+println!("Alby's Komputer - From server: {}", text);
+```
+
+Dengan demikian, setiap kali client menerima message dari server, maka akan muncul output seperti berikut:
+
+```
+Alby's Komputer - From server: 127.0.0.1:55642: i'm client 1
+Alby's Komputer - From server: 127.0.0.1:55643: i'm client 2
+Alby's Komputer - From server: 127.0.0.1:55644: i'm client 3
+```
+---
